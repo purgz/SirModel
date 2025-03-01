@@ -23,8 +23,8 @@ numRecovering = 0
 
 
 # Parameters
-infectionRate = 0.4    
-recoveryRate = 0.1
+infectionRate = 0.4
+recoveryRate = 0.3
 
 # Initialise a population of 1 infected and the rest susceptible.
 population = np.array([Agent("S") for i in range(populationSize)])
@@ -42,7 +42,7 @@ recOverT = []
 
 count = 0
 # Main loop - add some stopping criteria - maybe number of infected stops changing?
-while numRecovering < populationSize:
+while numInfected != 0:
     
     # Select two random individuals for infection
     rand1, rand2, rand3 = np.random.choice(populationSize, 3, replace=False)
