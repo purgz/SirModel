@@ -21,10 +21,12 @@ numSusceptible = populationSize - 1
 numInfected = 1
 numRecovering = 0
 
+#R0 = beta / gamma
 
 # Parameters
-infectionRate = 0.4
-recoveryRate = 0.3
+Rnaught = 2.79
+recoveryRate = 1/14
+infectionRate = recoveryRate * Rnaught
 
 # Initialise a population of 1 infected and the rest susceptible.
 population = np.array([Agent("S") for i in range(populationSize)])
@@ -45,6 +47,7 @@ count = 0
 while numInfected != 0:
     
     # Select two random individuals for infection
+
     rand1, rand2, rand3 = np.random.choice(populationSize, 3, replace=False)
 
     agent1 = population[rand1]
@@ -61,12 +64,16 @@ while numInfected != 0:
             numInfected += 1
             numSusceptible -= 1
 
+
+
+    
     recoverAgent = population[rand3]
     if recoverAgent.state == "I":
         if random.random() < recoveryRate:
             recoverAgent.setState("R")
             numRecovering += 1
             numInfected -= 1
+    
 
     if count % 100 == 0:
         print("********")
