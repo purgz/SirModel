@@ -23,7 +23,7 @@ numRecovering = 0
 
 #R0 = beta / gamma
 
-# Parameters
+# Parameters - I think these were estimates for covid
 Rnaught = 2.79
 recoveryRate = 1/14
 infectionRate = recoveryRate * Rnaught
@@ -45,9 +45,36 @@ recOverT = []
 count = 0
 # Main loop - add some stopping criteria - maybe number of infected stops changing?
 while numInfected != 0:
-    
+
+
+    # Have inner loop of each individual
+    for i in range(populationSize):
+        agent = population[i]
+        r = np.random.choice([x for x in range(populationSize) if x != i])
+        agentb = population[r]
+
+        if (agent.state == "I" and agentb.state == "S"):
+            if random.random() < infectionRate:
+                agentb.setState("I")
+                numInfected += 1
+                numSusceptible -= 1
+        elif (agent.state == "S" and agentb.state == "I"):
+            if random.random() < infectionRate:
+                agent.setState("I")
+                numInfected += 1
+                numSusceptible -= 1
+
+    for i in range(populationSize):
+        recoverAgent = population[i]
+        if recoverAgent.state == "I":
+            if random.random() < recoveryRate:
+                recoverAgent.setState("R")
+                numRecovering += 1
+                numInfected -= 1
+
     # Select two random individuals for infection
 
+    """
     rand1, rand2, rand3 = np.random.choice(populationSize, 3, replace=False)
 
     agent1 = population[rand1]
@@ -63,19 +90,19 @@ while numInfected != 0:
             agent1.setState("I")
             numInfected += 1
             numSusceptible -= 1
+    """
 
 
-
-    
+    """
     recoverAgent = population[rand3]
     if recoverAgent.state == "I":
         if random.random() < recoveryRate:
             recoverAgent.setState("R")
             numRecovering += 1
             numInfected -= 1
-    
+    """    
 
-    if count % 100 == 0:
+    if count % 10 == 0:
         print("********")
         print("Generation " , count)
         print("Infected ", numInfected)
