@@ -2,6 +2,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 
+
+
+"""
+Game theory coursework code - Henry Brooks
+Student id: 2422764
+"""
+
+
+
 class Agent:
     def __init__(self, state): 
         # State can be 'S' 'I' or 'R'
@@ -72,35 +81,6 @@ while numInfected != 0:
                 numRecovering += 1
                 numInfected -= 1
 
-    # Select two random individuals for infection
-
-    """
-    rand1, rand2, rand3 = np.random.choice(populationSize, 3, replace=False)
-
-    agent1 = population[rand1]
-    agent2 = population[rand2]
-
-    if (agent1.state == "I" and agent2.state == "S"):
-        if random.random() < infectionRate:
-            agent2.setState("I")
-            numInfected += 1
-            numSusceptible -= 1
-    elif (agent1.state == "S" and agent2.state == "I"):
-        if random.random() < infectionRate:
-            agent1.setState("I")
-            numInfected += 1
-            numSusceptible -= 1
-    """
-
-
-    """
-    recoverAgent = population[rand3]
-    if recoverAgent.state == "I":
-        if random.random() < recoveryRate:
-            recoverAgent.setState("R")
-            numRecovering += 1
-            numInfected -= 1
-    """    
 
     if count % 10 == 0:
         print("********")
