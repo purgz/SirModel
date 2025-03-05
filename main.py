@@ -23,7 +23,7 @@ class Agent:
         self.state = state
 
 # Some initial values
-populationSize = 5000
+populationSize = 1000
 numSusceptible = populationSize - 1
 numInfected = 1
 numRecovering = 0
@@ -69,13 +69,16 @@ def runSimulation(population, infectionRate, recoveryRate, vaccinate):
     susOverT = []
     recOverT = []
 
-    populationSize = 5000
+    populationSize = 1000
     numSusceptible = populationSize - 1
     numInfected = 1
     numRecovering = 0
 
+    # Improve this model where indivudals are vaccinated in the agent class and this applies to their infection and recovery rates.
+    # Assuming vaccine efficacy of 50 %
     if (vaccinate):
-        infectionRate *= 0.1
+        infectionRate *= 0.5
+    
 
     count = 0
     # Main loop - Stopping criteria when no more infected individuals
@@ -125,20 +128,20 @@ def runSimulation(population, infectionRate, recoveryRate, vaccinate):
 infectedOverT, susOverT, recOverT = runSimulation(population, infectionRate, recoveryRate, vaccinate = False)
 
 # Simple vaccination assumption
-infectedOverTV, susOverTV, recOverTV = runSimulation(population2, infectionRate, recoveryRate, vaccinate = False)
+infectedOverTV, susOverTV, recOverTV = runSimulation(population2, infectionRate, recoveryRate, vaccinate = True)
 
 
 fig, axes = plt.subplots(1, 2, figsize=(10,4))
 
-axes[0].plot(range(len(infectedOverT)), infectedOverT, color='b', label='Infected over time')
-axes[0].plot(range(len(infectedOverT)), susOverT, color='b', label='Susceptible over time')
+axes[0].plot(range(len(infectedOverT)), infectedOverT, color='r', label='Infected over time')
+axes[0].plot(range(len(infectedOverT)), susOverT, color='g', label='Susceptible over time')
 axes[0].plot(range(len(infectedOverT)), recOverT, color='b', label='Recovered over time')
 axes[0].set_title("SIR results for unvaccinated")
 axes[0].legend()
 
 # Second plot (right)
-axes[1].plot(range(len(infectedOverTV)), infectedOverTV, color='b', label='Infected over time')
-axes[1].plot(range(len(infectedOverTV)), susOverTV, color='b', label='Susceptible over time')
+axes[1].plot(range(len(infectedOverTV)), infectedOverTV, color='r', label='Infected over time')
+axes[1].plot(range(len(infectedOverTV)), susOverTV, color='g', label='Susceptible over time')
 axes[1].plot(range(len(infectedOverTV)), recOverTV, color='b', label='Recovered over time')
 axes[1].set_title("SIR results for vaccinated")
 axes[1].legend()
