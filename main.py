@@ -2,8 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import copy
-
-
 """
 Game theory coursework code - Henry Brooks
 Student id: 2422764
@@ -130,10 +128,11 @@ def runSimulation(population, infectionRate, recoveryRate, vaccinate):
 
 
 
+
 infectedOverT, susOverT, recOverT = [],[],[]
 infectedOverTV, susOverTV, recOverTV = [],[],[]
 #Run simulation n times
-for i in range(5):
+for i in range(10):
     population = copy.deepcopy(INITIAL_POPULATION)
     infectedOverTi, susOverTi, recOverTi = runSimulation(population, infectionRate, recoveryRate, vaccinate=False)
 
@@ -181,3 +180,4 @@ plt.show()
 
 
 ## Todo - improve vaccination using individual agent vaccination rates
+
