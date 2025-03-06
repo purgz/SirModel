@@ -29,6 +29,10 @@ populationSize = 1000
 numSusceptible = populationSize - 1
 numInfected = 1
 numRecovering = 0
+
+# Vaccine effectiveness - assumption
+vaccineEffect = 0.9
+
 #R0 = beta / gamma
 
 # Parameters - I think these were estimates for covid
@@ -49,13 +53,20 @@ population2 = copy.deepcopy(INITIAL_POPULATION)
 
 def updateProcess(agent1, agent2, infectionRate, numInfected, numSusceptible):
     # Infects with probability beta
+    # Calculate updated infection rate if the agent is vaccinated
+    Pinf = infectionRate
     if (agent1.state == "I" and agent2.state == "S"):
-        if random.random() < infectionRate:
+
+        if (agent2.vaccinated):
+          Pinf = (1 - vaccineEffect) * Pinf
+        if random.random() < Pinf:
             agent2.setState("I")
             numInfected += 1
             numSusceptible -= 1
     elif (agent1.state == "S" and agent2.state == "I"):
-        if random.random() < infectionRate:
+        if (agent1.vaccinated):
+          Pinf = (1 - vaccineEffect) * Pinf
+        if random.random() < Pinf:
             agent1.setState("I")
             numInfected += 1
             numSusceptible -= 1
@@ -71,16 +82,16 @@ def runSimulation(population, infectionRate, recoveryRate, vaccinate):
     susOverT = []
     recOverT = []
 
-    populationSize = 1000
+    #populationSize = 1000
     numSusceptible = populationSize - 1
     numInfected = 1
     numRecovering = 0
 
     # Improve this model where indivudals are vaccinated in the agent class and this applies to their infection and recovery rates.
     # Assuming vaccine efficacy of 50 %
-    if (vaccinate):
+    """if (vaccinate):
         infectionRate *= 0.5
-    
+    """
 
     count = 0
     # Main loop - Stopping criteria when no more infected individuals
@@ -111,7 +122,7 @@ def runSimulation(population, infectionRate, recoveryRate, vaccinate):
                         numInfected -= 1
 
 
-        if count % 1 == 0:
+        if count % 50 == 0:
             print("********")
             print("Generation " , count)
             print("Infected ", numInfected)
@@ -132,11 +143,14 @@ def runSimulation(population, infectionRate, recoveryRate, vaccinate):
 infectedOverT, susOverT, recOverT = [],[],[]
 infectedOverTV, susOverTV, recOverTV = [],[],[]
 #Run simulation n times
-for i in range(10):
+for i in range(2):
     population = copy.deepcopy(INITIAL_POPULATION)
     infectedOverTi, susOverTi, recOverTi = runSimulation(population, infectionRate, recoveryRate, vaccinate=False)
 
     population2 = copy.deepcopy(INITIAL_POPULATION)
+    for i, ind in enumerate(population2):
+      if random.random() < 0.65:
+        ind.vaccinate()
     infectedOverTVi, susOverTVi, recOverTVi = runSimulation(population2, infectionRate, recoveryRate, vaccinate = True)
 
     infectedOverT.append(infectedOverTi)
