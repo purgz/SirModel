@@ -2,10 +2,63 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import copy
+import argparse
+
 """
 Game theory coursework code - Henry Brooks
 Student id: 2422764
 """
+
+"""
+Command line arguments:
+-disease, some predefined choices of disease with beta and gamma defined, options = {COVID-19}
+-beta, override beta  value with float between 0 and 1
+-gamma, override gamma value with float between 0 and 1
+-n, give custom population size
+"""
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-disease", "--disease", help="Enter disease, options = COVID-19,...")
+parser.add_argument("-n", "--popsize", help="Enter population size")
+
+
+# Arguments for custom beta and gamma values - takes precidence over -disease
+parser.add_argument("-beta", "--beta", help="Enter custom beta value")
+parser.add_argument("-gamma", "--gamma", help="Enter custom gamma argument")
+
+args = parser.parse_args()
+
+# Constants
+COVID_R0 = 3.32
+COVID_GAMMA = 1/10 # 10 day infectious period
+COVID_BETA = COVID_R0 * COVID_GAMMA
+
+# Parameters - Values for COVID-19 from my report - default if no comand line args given
+Rnaught = 3.32
+recoveryRate = 1/10
+infectionRate = recoveryRate * Rnaught
+
+
+if args.disease != None:
+    if args.disease == "COVID-19":
+      infectionRate = COVID_BETA
+      recoveryRate = COVID_GAMMA
+    else:
+      print("INVALID DISEASE NAME")
+      exit()
+
+    print("Disease ", args.disease)
+
+if args.beta != None:
+  print("Override beta ", args.beta)
+  infectionRate = float(args.beta)
+if args.gamma != None:
+  print("Override gamma ", args.gamma)
+  recoveryRate = float(args.gamma)
+
+
+print("INFECTION RATE ", infectionRate)
+print("RECOVERY RATE ", recoveryRate)
 
 
 # Basic agent class for simple model
@@ -25,7 +78,11 @@ class Agent:
         self.vaccinated = True
 
 # Some initial values
+
 populationSize = 1000
+if args.popsize != None:
+  populationSize = int(args.popsize)
+
 numSusceptible = populationSize - 1
 numInfected = 1
 numRecovering = 0
@@ -33,12 +90,6 @@ numRecovering = 0
 # Vaccine effectiveness - assumption
 vaccineEffect = 0.9
 
-#R0 = beta / gamma
-
-# Parameters - I think these were estimates for covid
-Rnaught = 2.79
-recoveryRate = 1/14
-infectionRate = recoveryRate * Rnaught
 
 # Initialise a population of 1 infected and the rest susceptible.
 # Population is represented as a simple list of agents
@@ -122,9 +173,9 @@ def runSimulation(population, infectionRate, recoveryRate, vaccinate):
                         numInfected -= 1
 
 
-        if count % 50 == 0:
+        if count % 20 == 0:
             print("********")
-            print("Generation " , count)
+            print("Timestep " , count)
             print("Infected ", numInfected)
             print("Susceptible ", numSusceptible)
             print("Recovering ", numRecovering)
@@ -143,7 +194,7 @@ def runSimulation(population, infectionRate, recoveryRate, vaccinate):
 infectedOverT, susOverT, recOverT = [],[],[]
 infectedOverTV, susOverTV, recOverTV = [],[],[]
 #Run simulation n times
-for i in range(2):
+for i in range(1):
     population = copy.deepcopy(INITIAL_POPULATION)
     infectedOverTi, susOverTi, recOverTi = runSimulation(population, infectionRate, recoveryRate, vaccinate=False)
 
