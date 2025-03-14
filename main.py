@@ -79,7 +79,7 @@ class Agent:
 
 # Some initial values
 
-populationSize = 1000
+populationSize = 64
 if args.popsize != None:
   populationSize = int(args.popsize)
 
@@ -125,9 +125,40 @@ def updateProcess(agent1, agent2, infectionRate, numInfected, numSusceptible):
     return numInfected, numSusceptible
 
 
+def getNeighbours(lattice, x, y):
+    neighbours = []
+   
+    dxdy = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1,-1), (-1,1), (1,-1), (1,1)]
+
+    for dx,dy in dxdy:
+        a,b = x + dx , y + dy
+
+        if (0 <= a < len(lattice) and 0 <= b < len(lattice[0])):  
+            neighbours.append(lattice[a][b])
+
+    return neighbours
+
+def latticeUpdateProcess(lattice, infectionRate, numInfected, numSusceptible):
+   
+   infectedCoords = [(x,y) for x in range(len(lattice)) for y in range(len(lattice[0])) if lattice[x][y].state == "I"]
+
+   for x,y in infectedCoords:
+      agent1 = lattice[x][y]
+
+      neighbours = getNeighbours(lattice, x , y)
+
+      for agent2 in neighbours:
+         numInfected, numSusceptible = updateProcess(agent1, agent2, infectionRate, numInfected, numSusceptible)
+         
+   return lattice, numInfected, numSusceptible
+
 # Would like to add more complex agents, where the infection rates are individual and based on vaccination / quarantining etc.
 
-def runSimulation(population, infectionRate, recoveryRate, vaccinate):
+def runSimulation(population, infectionRate, recoveryRate, nLattice):
+
+
+    # Ideally there should be a check here that populaton size is a perfect square iff nlattice is set to true.
+
     # Graph data
     infectedOverT = []
     susOverT = []
@@ -138,29 +169,44 @@ def runSimulation(population, infectionRate, recoveryRate, vaccinate):
     numInfected = 1
     numRecovering = 0
 
-    # Improve this model where indivudals are vaccinated in the agent class and this applies to their infection and recovery rates.
-    # Assuming vaccine efficacy of 50 %
-    """if (vaccinate):
-        infectionRate *= 0.5
-    """
+    # Extra data for lattice arrangement
+    lattice = []
+    rowsN = int(np.sqrt(len(population)))
+    for i in range(rowsN):
+       lattice.append(population[i*rowsN : (i+1)*rowsN])
+
+    
+    if nLattice:
+        print("INITIAL LATTICE")
+        for row in lattice:
+            print(" | ".join(f"{agent.state:2}" for agent in row))
 
     count = 0
     # Main loop - Stopping criteria when no more infected individuals
     while count < 100: #numInfected != 0 and 
 
-        # Have inner loop of each individual
-        if numSusceptible != 0: # for efficiency - all infected so no need to perform this loop
-        
-            for i in range(populationSize):
+        if nLattice:
 
-                # The selected individual meets a random individual (agentb) and then update process is applied.
-                agent = population[i]
-        
-                r = np.random.choice([x for x in range(populationSize) if x != i])
-                agentb = population[r]
+            print("******************************************")
+            print(count, numInfected, numSusceptible)
+            for row in lattice:
+                print(" | ".join(f"{agent.state:2}" for agent in row))
+            lattice, numInfected, numSusceptible = latticeUpdateProcess(lattice, infectionRate, numInfected, numSusceptible)
 
-                # Apply the update process for two individuals
-                numInfected, numSusceptible = updateProcess(agent, agentb, infectionRate, numInfected, numSusceptible)
+        else:
+            # Have inner loop of each individual
+            if numSusceptible != 0: # for efficiency - all infected so no need to perform this loop
+            
+                for i in range(populationSize):
+
+                    # The selected individual meets a random individual (agentb) and then update process is applied.
+                    agent = population[i]
+            
+                    r = np.random.choice([x for x in range(populationSize) if x != i])
+                    agentb = population[r]
+
+                    # Apply the update process for two individuals
+                    numInfected, numSusceptible = updateProcess(agent, agentb, infectionRate, numInfected, numSusceptible)
 
         # Check each agent recovers at this timestep
         if (count > 7):   ## Arbitrary value to prevent single infected person recoverying on the first day
@@ -173,12 +219,12 @@ def runSimulation(population, infectionRate, recoveryRate, vaccinate):
                         numInfected -= 1
 
 
-        if count % 20 == 0:
-            print("********")
-            print("Timestep " , count)
-            print("Infected ", numInfected)
-            print("Susceptible ", numSusceptible)
-            print("Recovering ", numRecovering)
+        #if count % 20 == 0:
+         #   print("********")
+          #  print("Timestep " , count)
+           # print("Infected ", numInfected)
+            #print("Susceptible ", numSusceptible)
+            #print("Recovering ", numRecovering)
 
         infectedOverT.append(numInfected)
         susOverT.append(numSusceptible)
@@ -189,6 +235,9 @@ def runSimulation(population, infectionRate, recoveryRate, vaccinate):
     return infectedOverT, susOverT, recOverT
 
 
+# Default interaction topology is all to all
+# 2nd topology is NxN lattice. - required population size to be square number for convenience...
+# Introducing the lattice I suppose will only require changing the update process.
 
 
 infectedOverT, susOverT, recOverT = [],[],[]
@@ -196,13 +245,13 @@ infectedOverTV, susOverTV, recOverTV = [],[],[]
 #Run simulation n times
 for i in range(1):
     population = copy.deepcopy(INITIAL_POPULATION)
-    infectedOverTi, susOverTi, recOverTi = runSimulation(population, infectionRate, recoveryRate, vaccinate=False)
+    infectedOverTi, susOverTi, recOverTi = runSimulation(population, infectionRate, recoveryRate, nLattice = True)
 
     population2 = copy.deepcopy(INITIAL_POPULATION)
-    for i, ind in enumerate(population2):
-      if random.random() < 0.65:
-        ind.vaccinate()
-    infectedOverTVi, susOverTVi, recOverTVi = runSimulation(population2, infectionRate, recoveryRate, vaccinate = True)
+    #for i, ind in enumerate(population2):
+     # if random.random() < 0.65:
+      #  ind.vaccinate()
+    infectedOverTVi, susOverTVi, recOverTVi = runSimulation(population2, infectionRate, recoveryRate, nLattice = False)
 
     infectedOverT.append(infectedOverTi)
     susOverT.append(susOverTi)
