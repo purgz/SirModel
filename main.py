@@ -41,6 +41,10 @@ COVID_R0 = 3.32
 COVID_GAMMA = 1/10 # 10 day infectious period
 COVID_BETA = COVID_R0 * COVID_GAMMA
 
+FLU_R0 = 1.28
+FLU_GAMMA = 1 / 5
+FLU_BETA = FLU_R0 * FLU_GAMMA
+
 # Parameters - Values for COVID-19 from my report - default if no comand line args given
 Rnaught = 3.32
 recoveryRate = 1/10
@@ -51,6 +55,9 @@ if args.disease != None:
     if args.disease == "COVID-19":
       infectionRate = COVID_BETA
       recoveryRate = COVID_GAMMA
+    elif args.disease == "INFLUENZA":
+        infectionRate = FLU_BETA
+        recoveryRate = FLU_GAMMA
     else:
       print("INVALID DISEASE NAME")
       exit()
@@ -87,7 +94,7 @@ class Agent:
 
 # Some initial values
 
-populationSize = 400
+populationSize = 900
 if args.popsize != None:
   populationSize = int(args.popsize)
 
@@ -227,12 +234,13 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
                         numInfected -= 1
 
 
-        #if count % 20 == 0:
-         #   print("********")
-          #  print("Timestep " , count)
-           # print("Infected ", numInfected)
-            #print("Susceptible ", numSusceptible)
-            #print("Recovering ", numRecovering)
+        #
+        if count % 20 == 0:
+           print("********")
+           print("Timestep " , count)
+           print("Infected ", numInfected)
+           print("Susceptible ", numSusceptible)
+           print("Recovering ", numRecovering)
 
         infectedOverT.append(numInfected)
         susOverT.append(numSusceptible)
@@ -251,15 +259,15 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
 infectedOverT, susOverT, recOverT = [],[],[]
 infectedOverTV, susOverTV, recOverTV = [],[],[]
 #Run simulation n times
-for i in range(1):
+for i in range(10):
     population = copy.deepcopy(INITIAL_POPULATION)
-    infectedOverTi, susOverTi, recOverTi = runSimulation(population, infectionRate, recoveryRate, nLattice = True)
+    infectedOverTi, susOverTi, recOverTi = runSimulation(population, infectionRate, recoveryRate, nLattice = False)
 
     population2 = copy.deepcopy(INITIAL_POPULATION)
     for i, ind in enumerate(population2):
       if random.random() < 0.65:
         ind.vaccinate()
-    infectedOverTVi, susOverTVi, recOverTVi = runSimulation(population2, infectionRate, recoveryRate, nLattice = True)
+    infectedOverTVi, susOverTVi, recOverTVi = runSimulation(population2, infectionRate, recoveryRate, nLattice = False)
 
     infectedOverT.append(infectedOverTi)
     susOverT.append(susOverTi)
@@ -290,49 +298,52 @@ infNormV = infectedOverTV / totalV
 susNormV = susOverTV / totalV
 recNormV = recOverTV / totalV
 
+print(susOverTV[0] / totalV)
+
+
 traj = list(zip(susNorm, infNorm, recNorm))
 trajV = list(zip(susNormV, infNormV, recNormV))
 
-fig, axesT = plt.subplots(1 ,2 ,figsize=(12,6))
+fig, axes = plt.subplots(2 ,2 ,figsize=(12,6))
 
 
-tax = ternary.TernaryAxesSubplot(ax=axesT[0],scale=1.0)
+tax = ternary.TernaryAxesSubplot(ax=axes[0,1],scale=1.0)
 tax.boundary()
 tax.gridlines(color="gray", multiple=0.1)
 tax.plot(traj, linewidth=2, label="SIR dynamics Unvaccinated", marker='o')
-tax.right_corner_label("Recovered ", fontsize=12)
-tax.top_corner_label("Infected I", fontsize=12)
-tax.left_corner_label("Susceptible ", fontsize=12)
+tax.right_corner_label("S ", fontsize=12)
+tax.top_corner_label("I", fontsize=12)
+tax.left_corner_label("R", fontsize=12)
 tax.legend()
 
-tax2 = ternary.TernaryAxesSubplot(ax=axesT[1],scale=1.0)
+tax2 = ternary.TernaryAxesSubplot(ax=axes[1,1],scale=1.0)
 tax2.boundary()
 tax2.gridlines(color="gray", multiple=0.1)
-tax2.plot(trajV, linewidth=2, label="SIR dynamics Vaccinateed", marker='o')
-tax2.right_corner_label("Recovered ", fontsize=12)
-tax2.top_corner_label("Infected I", fontsize=12)
-tax2.left_corner_label("Susceptible ", fontsize=12)
+tax2.plot(trajV, linewidth=2, label="SIR dynamics Vaccinated", marker='o')
+tax2.right_corner_label("S", fontsize=12)
+tax2.top_corner_label("I", fontsize=12)
+tax2.left_corner_label("R", fontsize=12)
 tax2.legend()
 
 
 
-plt.show()
 
 
-fig, axes = plt.subplots(1, 2, figsize=(10,4))
 
-axes[0].plot(range(len(infectedOverT)), infectedOverT, color='r', label='Infected over time')
-axes[0].plot(range(len(infectedOverT)), susOverT, color='g', label='Susceptible over time')
-axes[0].plot(range(len(infectedOverT)), recOverT, color='b', label='Recovered over time')
-axes[0].set_title("SIR results for unvaccinated")
-axes[0].legend()
+#fig, axes = plt.subplots(1, 2, figsize=(10,4))
+
+axes[0,0].plot(range(len(infectedOverT)), infectedOverT, color='r', label='Infected over time')
+axes[0,0].plot(range(len(infectedOverT)), susOverT, color='g', label='Susceptible over time')
+axes[0,0].plot(range(len(infectedOverT)), recOverT, color='b', label='Recovered over time')
+axes[0,0].set_title("SIR results for unvaccinated")
+axes[0,0].legend()
 
 # Second plot (right)
-axes[1].plot(range(len(infectedOverTV)), infectedOverTV, color='r', label='Infected over time')
-axes[1].plot(range(len(infectedOverTV)), susOverTV, color='g', label='Susceptible over time')
-axes[1].plot(range(len(infectedOverTV)), recOverTV, color='b', label='Recovered over time')
-axes[1].set_title("SIR results for vaccinated")
-axes[1].legend()
+axes[1,0].plot(range(len(infectedOverTV)), infectedOverTV, color='r', label='Infected over time')
+axes[1,0].plot(range(len(infectedOverTV)), susOverTV, color='g', label='Susceptible over time')
+axes[1,0].plot(range(len(infectedOverTV)), recOverTV, color='b', label='Recovered over time')
+axes[1,0].set_title("SIR results for vaccinated")
+axes[1,0].legend()
 
 # Show the plots
 plt.tight_layout()
