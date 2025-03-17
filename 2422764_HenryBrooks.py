@@ -34,7 +34,21 @@ parser.add_argument("-n", "--popsize", help="Enter population size")
 parser.add_argument("-beta", "--beta", help="Enter custom beta value")
 parser.add_argument("-gamma", "--gamma", help="Enter custom gamma argument")
 
+parser.add_argument("-repeats", "--repeats")
+parser.add_argument("-lattice", "--lattice")
+
 args = parser.parse_args()
+
+repeats = 1
+if args.repeats != None:
+    repeats = int(args.repeats)
+
+useLattice = False
+
+if args.lattice != None:
+    if args.lattice == "True":
+        useLattice = True
+
 
 # Constants
 COVID_R0 = 3.32
@@ -44,6 +58,10 @@ COVID_BETA = COVID_R0 * COVID_GAMMA
 FLU_R0 = 1.28
 FLU_GAMMA = 1 / 5
 FLU_BETA = FLU_R0 * FLU_GAMMA
+
+MEASLES_R0 = 17.5
+MEASLES_GAMMA = 1 / 4
+MEASLES_BETA = MEASLES_GAMMA * MEASLES_R0
 
 # Parameters - Values for COVID-19 from my report - default if no comand line args given
 Rnaught = 3.32
@@ -58,6 +76,9 @@ if args.disease != None:
     elif args.disease == "INFLUENZA":
         infectionRate = FLU_BETA
         recoveryRate = FLU_GAMMA
+    elif args.disease == "MEASLES":
+        infectionRate = MEASLES_BETA
+        recoveryRate = MEASLES_GAMMA
     else:
       print("INVALID DISEASE NAME")
       exit()
@@ -103,7 +124,7 @@ numInfected = 1
 numRecovering = 0
 
 # Vaccine effectiveness - assumption
-vaccineEffect = 0.9
+vaccineEffect = 0.96
 
 
 # Initialise a population of 1 infected and the rest susceptible.
@@ -259,15 +280,15 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
 infectedOverT, susOverT, recOverT = [],[],[]
 infectedOverTV, susOverTV, recOverTV = [],[],[]
 #Run simulation n times
-for i in range(10):
+for i in range(repeats):
     population = copy.deepcopy(INITIAL_POPULATION)
-    infectedOverTi, susOverTi, recOverTi = runSimulation(population, infectionRate, recoveryRate, nLattice = False)
+    infectedOverTi, susOverTi, recOverTi = runSimulation(population, infectionRate, recoveryRate, nLattice = useLattice)
 
     population2 = copy.deepcopy(INITIAL_POPULATION)
     for i, ind in enumerate(population2):
       if random.random() < 0.65:
         ind.vaccinate()
-    infectedOverTVi, susOverTVi, recOverTVi = runSimulation(population2, infectionRate, recoveryRate, nLattice = False)
+    infectedOverTVi, susOverTVi, recOverTVi = runSimulation(population2, infectionRate, recoveryRate, nLattice = useLattice)
 
     infectedOverT.append(infectedOverTi)
     susOverT.append(susOverTi)
