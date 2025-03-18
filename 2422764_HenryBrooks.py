@@ -4,6 +4,15 @@ import random
 import copy
 import argparse
 import ternary
+import time
+import os
+
+"""
+Game theory coursework code - Henry Brooks
+Student id: 2422764
+
+All code solely developed by me
+"""
 
 """
 Libraries required
@@ -12,10 +21,7 @@ numpy
 python-ternary
 """
 
-"""
-Game theory coursework code - Henry Brooks
-Student id: 2422764
-"""
+
 
 """
 Command line arguments:
@@ -24,6 +30,12 @@ Command line arguments:
 -gamma, override gamma value with float between 0 and 1
 -n, give custom population size
 -repeats, give number of runs of simulation for average results
+-lattice, give True to run the simulation in a lattce, -> must provide popsize -n to be a square, e.g 64, 400, 900...
+-E, vaccine efficacy, provide a value between 0, and 1
+-P, vaccinated proportion, provide a value between 0 and 1
+-quarantine, provide a value between 0 and 1, which is probabiltiy that an individual will quarantine upon infection determines whether or not quarantine included in model - only applicable when lattice is set to True
+-animate-delay, provide a float value (the number of seconds delay between each printing of the grid - a value of around 1 is nice) 
+I found the animate option nice to see how quarantine appeared visibly in the grid and blocked off areas of the landscape from infection!
 """
 
 parser = argparse.ArgumentParser()
@@ -45,6 +57,10 @@ parser.add_argument("-E", "--vaccineE")
 # Argument P provides the proportion of population vaccinated. - see what proportion required for herd immunity
 # Value provided float between 0 and 1 -> proportion of population vaccinated.
 parser.add_argument("-P", "--vaccineP")
+
+
+parser.add_argument("-animate", "--animate")
+parser.add_argument("-quarantine", "--quarantine")     # Quarantine should be set a float value of the percentage change of being quanrantined when you are infected.
 
 args = parser.parse_args()
 
@@ -141,6 +157,9 @@ class Agent:
     def vaccinate(self):
         self.vaccinated = True
 
+    def quarantine(self):
+        self.state = "Q" # New state - only going to be applicable in the grid topology, id like to see how quaratined individuals "block" transmission 
+
 
 
 
@@ -155,7 +174,7 @@ INITIAL_POPULATION = copy.deepcopy(population)
 population2 = copy.deepcopy(INITIAL_POPULATION)
 
 
-def updateProcess(agent1, agent2, infectionRate, numInfected, numSusceptible):
+def updateProcess(agent1, agent2, infectionRate, numInfected, numSusceptible, isLattice=False):  # Islattice needed so we can deal with quarantining but only for grid topology
     # Infects with probability beta
     # Calculate updated infection rate if the agent is vaccinated
     Pinf = infectionRate
@@ -167,6 +186,11 @@ def updateProcess(agent1, agent2, infectionRate, numInfected, numSusceptible):
             agent2.setState("I")
             numInfected += 1
             numSusceptible -= 1
+
+            if isLattice and args.quarantine != None:
+                if random.random() < float(args.quarantine):  # Lets start with a 30% chance of an agent instantly quarantining
+                    agent2.setState("Q")
+
     elif (agent1.state == "S" and agent2.state == "I"):
         if (agent1.vaccinated):
           Pinf = (1 - vaccineEffect) * Pinf
@@ -174,6 +198,10 @@ def updateProcess(agent1, agent2, infectionRate, numInfected, numSusceptible):
             agent1.setState("I")
             numInfected += 1
             numSusceptible -= 1
+
+            if isLattice and args.quarantine != None:
+                if random.random() < float(args.quarantine):   # I know this is terrible management of command line args, but im assuming the user just inputs correct format arguments
+                    agent1.setState("Q")
 
     return numInfected, numSusceptible
 
@@ -201,7 +229,7 @@ def latticeUpdateProcess(lattice, infectionRate, numInfected, numSusceptible):
       neighbours = getNeighbours(lattice, x , y)
 
       for agent2 in neighbours:
-         numInfected, numSusceptible = updateProcess(agent1, agent2, infectionRate, numInfected, numSusceptible)
+         numInfected, numSusceptible = updateProcess(agent1, agent2, infectionRate, numInfected, numSusceptible, isLattice=True)
          
    return lattice, numInfected, numSusceptible
 
@@ -236,14 +264,17 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
 
     count = 0
     # Main loop - Stopping criteria when no more infected individuals
-    while count < 200: #numInfected != 0 and 
+    while count < 100: #numInfected != 0 and 
 
         if nLattice:
+            if args.animate != None:
+                time.sleep(float(args.animate))
+                
+                print("******************************************")
+                print(count, numInfected, numSusceptible)
+                for row in lattice:
+                    print(" | ".join(f"{agent.state:2}" for agent in row))
 
-            print("******************************************")
-            print(count, numInfected, numSusceptible)
-            for row in lattice:
-                print(" | ".join(f"{agent.state:2}" for agent in row))
             lattice, numInfected, numSusceptible = latticeUpdateProcess(lattice, infectionRate, numInfected, numSusceptible)
 
         else:
@@ -265,7 +296,7 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
         if (count > 7):   ## Arbitrary value to prevent single infected person recoverying on the first day
             for i in range(populationSize):
                 recoverAgent = population[i]
-                if recoverAgent.state == "I":
+                if recoverAgent.state == "I" or recoverAgent.state == "Q": # also allow quarantined to recover
                     # Increas recovery rate for vaccinated
                     Prec = recoveryRate
                     if recoverAgent.vaccinated:
@@ -280,10 +311,11 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
         for i in range(populationSize):     
             agent = population[i]
             if agent.state == "R":
-                if random.random() < 0.05:  
+                if random.random() < 0.0:  
                     agent.setState("S")    
                     numRecovering -= 1         
                     numSusceptible += 1
+
         # I like the case where this random chance is 0.05 with measles as there seems to be a cyclic trajectory, 
         # There is a nice unstable fixed point that the trajectory circles !
 
