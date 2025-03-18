@@ -36,6 +36,12 @@ Command line arguments:
 -quarantine, provide a value between 0 and 1, which is probabiltiy that an individual will quarantine upon infection determines whether or not quarantine included in model - only applicable when lattice is set to True
 -animate-delay, provide a float value (the number of seconds delay between each printing of the grid - a value of around 1 is nice) 
 I found the animate option nice to see how quarantine appeared visibly in the grid and blocked off areas of the landscape from infection!
+
+
+These arguments should be enough to try out the simulation but please see report for some example commands and more instructions.
+
+Upon completion of each run, an SIR time series graph, and trajectory plot will appear for both the vaccinated and unvaccinated runs.
+If no vaccination params are given defaults are used.
 """
 
 parser = argparse.ArgumentParser()
