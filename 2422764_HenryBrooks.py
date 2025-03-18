@@ -23,6 +23,7 @@ Command line arguments:
 -beta, override beta  value with float between 0 and 1
 -gamma, override gamma value with float between 0 and 1
 -n, give custom population size
+-repeats, give number of runs of simulation for average results
 """
 
 parser = argparse.ArgumentParser()
@@ -36,6 +37,14 @@ parser.add_argument("-gamma", "--gamma", help="Enter custom gamma argument")
 
 parser.add_argument("-repeats", "--repeats")
 parser.add_argument("-lattice", "--lattice")
+
+
+# Vaccine arguments
+# Argument E provides the vaccine efficacy.
+parser.add_argument("-E", "--vaccineE")
+# Argument P provides the proportion of population vaccinated. - see what proportion required for herd immunity
+# Value provided float between 0 and 1 -> proportion of population vaccinated.
+parser.add_argument("-P", "--vaccineP")
 
 args = parser.parse_args()
 
@@ -93,6 +102,25 @@ if args.gamma != None:
   recoveryRate = float(args.gamma)
 
 
+  # Some initial values
+
+populationSize = 900
+if args.popsize != None:
+  populationSize = int(args.popsize)
+
+numSusceptible = populationSize - 1
+numInfected = 1
+numRecovering = 0
+
+# Vaccine effectiveness
+
+vaccineEffect = 0.96
+vaccineP = 0.9
+if args.vaccineE != None:
+    vaccineEffect = float(args.vaccineE)
+if args.vaccineP != None:
+    vaccineP = float(args.vaccineP)
+
 print("INFECTION RATE ", infectionRate)
 print("RECOVERY RATE ", recoveryRate)
 
@@ -113,18 +141,7 @@ class Agent:
     def vaccinate(self):
         self.vaccinated = True
 
-# Some initial values
 
-populationSize = 900
-if args.popsize != None:
-  populationSize = int(args.popsize)
-
-numSusceptible = populationSize - 1
-numInfected = 1
-numRecovering = 0
-
-# Vaccine effectiveness - assumption
-vaccineEffect = 0.96
 
 
 # Initialise a population of 1 infected and the rest susceptible.
@@ -249,7 +266,11 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
             for i in range(populationSize):
                 recoverAgent = population[i]
                 if recoverAgent.state == "I":
-                    if random.random() < recoveryRate:
+                    # Increas recovery rate for vaccinated
+                    Prec = recoveryRate
+                    if recoverAgent.vaccinated:
+                        Prec = Prec * 1.2 
+                    if random.random() < Prec:
                         recoverAgent.setState("R")
                         numRecovering += 1
                         numInfected -= 1
@@ -286,7 +307,7 @@ for i in range(repeats):
 
     population2 = copy.deepcopy(INITIAL_POPULATION)
     for i, ind in enumerate(population2):
-      if random.random() < 0.65:
+      if random.random() < vaccineP:
         ind.vaccinate()
     infectedOverTVi, susOverTVi, recOverTVi = runSimulation(population2, infectionRate, recoveryRate, nLattice = useLattice)
 
@@ -327,7 +348,7 @@ trajV = list(zip(susNormV, infNormV, recNormV))
 
 fig, axes = plt.subplots(2 ,2 ,figsize=(12,6))
 
-
+# Ternary plots require python-ternary
 tax = ternary.TernaryAxesSubplot(ax=axes[0,1],scale=1.0)
 tax.boundary()
 tax.gridlines(color="gray", multiple=0.1)
