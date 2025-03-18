@@ -180,6 +180,7 @@ INITIAL_POPULATION = copy.deepcopy(population)
 population2 = copy.deepcopy(INITIAL_POPULATION)
 
 
+# This is the main pairwise update process, given two agents
 def updateProcess(agent1, agent2, infectionRate, numInfected, numSusceptible, isLattice=False):  # Islattice needed so we can deal with quarantining but only for grid topology
     # Infects with probability beta
     # Calculate updated infection rate if the agent is vaccinated
@@ -212,6 +213,7 @@ def updateProcess(agent1, agent2, infectionRate, numInfected, numSusceptible, is
     return numInfected, numSusceptible
 
 
+# Getting neighbours for grid topology
 def getNeighbours(lattice, x, y):
     neighbours = []
    
@@ -225,6 +227,8 @@ def getNeighbours(lattice, x, y):
 
     return neighbours
 
+
+# Modified update process for grid, gets infected individuals, then applies process to all neighbours
 def latticeUpdateProcess(lattice, infectionRate, numInfected, numSusceptible):
    
    infectedCoords = [(x,y) for x in range(len(lattice)) for y in range(len(lattice[0])) if lattice[x][y].state == "I"]
@@ -239,8 +243,8 @@ def latticeUpdateProcess(lattice, infectionRate, numInfected, numSusceptible):
          
    return lattice, numInfected, numSusceptible
 
-# Would like to add more complex agents, where the infection rates are individual and based on vaccination / quarantining etc.
 
+# Main simulation loop.
 def runSimulation(population, infectionRate, recoveryRate, nLattice):
 
 
@@ -273,6 +277,8 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
     while count < 100: #numInfected != 0 and 
 
         if nLattice:
+
+            # Grid topology
             if args.animate != None:
                 time.sleep(float(args.animate))
                 
@@ -284,6 +290,8 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
             lattice, numInfected, numSusceptible = latticeUpdateProcess(lattice, infectionRate, numInfected, numSusceptible)
 
         else:
+            # All to All topology
+
             # Have inner loop of each individual
             if numSusceptible != 0: # for efficiency - all infected so no need to perform this loop
             
@@ -303,7 +311,7 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
             for i in range(populationSize):
                 recoverAgent = population[i]
                 if recoverAgent.state == "I" or recoverAgent.state == "Q": # also allow quarantined to recover
-                    # Increas recovery rate for vaccinated
+                    # Increase recovery rate for vaccinated
                     Prec = recoveryRate
                     if recoverAgent.vaccinated:
                         Prec = Prec * 1.2 
@@ -313,7 +321,7 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
                         numInfected -= 1
 
 
-        # Reinfection
+        # Reinfection - new modification to allow for some cylic trajectories (hopefully)
         for i in range(populationSize):     
             agent = population[i]
             if agent.state == "R":
@@ -346,6 +354,9 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
 # 2nd topology is NxN lattice. - required population size to be square number for convenience...
 # Introducing the lattice I suppose will only require changing the update process.
 
+
+# All the below code is just boring matplotlib and python-ternary plotting code.
+# Produces 4 plots.
 
 infectedOverT, susOverT, recOverT = [],[],[]
 infectedOverTV, susOverTV, recOverTV = [],[],[]
@@ -415,10 +426,6 @@ tax2.right_corner_label("S", fontsize=12)
 tax2.top_corner_label("I", fontsize=12)
 tax2.left_corner_label("R", fontsize=12)
 tax2.legend()
-
-
-
-
 
 
 #fig, axes = plt.subplots(1, 2, figsize=(10,4))
