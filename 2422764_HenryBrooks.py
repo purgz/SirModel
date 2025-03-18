@@ -236,7 +236,7 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
 
     count = 0
     # Main loop - Stopping criteria when no more infected individuals
-    while count < 100: #numInfected != 0 and 
+    while count < 200: #numInfected != 0 and 
 
         if nLattice:
 
@@ -275,6 +275,17 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
                         numRecovering += 1
                         numInfected -= 1
 
+
+        # Reinfection
+        for i in range(populationSize):     
+            agent = population[i]
+            if agent.state == "R":
+                if random.random() < 0.05:  
+                    agent.setState("S")    
+                    numRecovering -= 1         
+                    numSusceptible += 1
+        # I like the case where this random chance is 0.05 with measles as there seems to be a cyclic trajectory, 
+        # There is a nice unstable fixed point that the trajectory circles !
 
         #
         if count % 20 == 0:
@@ -352,7 +363,7 @@ fig, axes = plt.subplots(2 ,2 ,figsize=(12,6))
 tax = ternary.TernaryAxesSubplot(ax=axes[0,1],scale=1.0)
 tax.boundary()
 tax.gridlines(color="gray", multiple=0.1)
-tax.plot(traj, linewidth=2, label="SIR dynamics Unvaccinated", marker='o')
+tax.plot(traj, linewidth=1, label="SIR dynamics Unvaccinated")
 tax.right_corner_label("S ", fontsize=12)
 tax.top_corner_label("I", fontsize=12)
 tax.left_corner_label("R", fontsize=12)
@@ -361,7 +372,7 @@ tax.legend()
 tax2 = ternary.TernaryAxesSubplot(ax=axes[1,1],scale=1.0)
 tax2.boundary()
 tax2.gridlines(color="gray", multiple=0.1)
-tax2.plot(trajV, linewidth=2, label="SIR dynamics Vaccinated", marker='o')
+tax2.plot(trajV, linewidth=1, label="SIR dynamics Vaccinated")
 tax2.right_corner_label("S", fontsize=12)
 tax2.top_corner_label("I", fontsize=12)
 tax2.left_corner_label("R", fontsize=12)
