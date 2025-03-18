@@ -33,6 +33,7 @@ Command line arguments:
 -lattice, give True to run the simulation in a lattce, -> must provide popsize -n to be a square, e.g 64, 400, 900...
 -E, vaccine efficacy, provide a value between 0, and 1
 -P, vaccinated proportion, provide a value between 0 and 1
+-reinfection, provide float between 0 and 1 which is chance of reinfection
 -quarantine, provide a value between 0 and 1, which is probabiltiy that an individual will quarantine upon infection determines whether or not quarantine included in model - only applicable when lattice is set to True
 -animate-delay, provide a float value (the number of seconds delay between each printing of the grid - a value of around 1 is nice) 
 I found the animate option nice to see how quarantine appeared visibly in the grid and blocked off areas of the landscape from infection!
@@ -67,6 +68,9 @@ parser.add_argument("-P", "--vaccineP")
 
 parser.add_argument("-animate", "--animate")
 parser.add_argument("-quarantine", "--quarantine")     # Quarantine should be set a float value of the percentage change of being quanrantined when you are infected.
+
+
+parser.add_argument("-reinfection", "--reinfection")
 
 args = parser.parse_args()
 
@@ -322,13 +326,14 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
 
 
         # Reinfection - new modification to allow for some cylic trajectories (hopefully)
-        for i in range(populationSize):     
-            agent = population[i]
-            if agent.state == "R":
-                if random.random() < 0.0:  
-                    agent.setState("S")    
-                    numRecovering -= 1         
-                    numSusceptible += 1
+        if (args.reinfection != None):
+            for i in range(populationSize):     
+                agent = population[i]
+                if agent.state == "R":
+                    if random.random() < float(args.reinfection):  
+                        agent.setState("S")    
+                        numRecovering -= 1         
+                        numSusceptible += 1
 
         # I like the case where this random chance is 0.05 with measles as there seems to be a cyclic trajectory, 
         # There is a nice unstable fixed point that the trajectory circles !
