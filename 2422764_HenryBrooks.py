@@ -5,10 +5,9 @@ import copy
 import argparse
 import ternary
 import time
-import os
 
 """
-Game theory coursework code - Henry Brooks
+Game theory coursework - Henry Brooks
 Student id: 2422764
 
 All code solely developed by me
@@ -25,6 +24,7 @@ python-ternary
 
 """
 Command line arguments:
+-timesteps, give integer for number of timesteps to run , default 100
 -disease, some predefined choices of disease with beta and gamma defined, options = {COVID-19}
 -beta, override beta  value with float between 0 and 1
 -gamma, override gamma value with float between 0 and 1
@@ -35,7 +35,7 @@ Command line arguments:
 -P, vaccinated proportion, provide a value between 0 and 1
 -reinfection, provide float between 0 and 1 which is chance of reinfection
 -quarantine, provide a value between 0 and 1, which is probabiltiy that an individual will quarantine upon infection determines whether or not quarantine included in model - only applicable when lattice is set to True
--animate-delay, provide a float value (the number of seconds delay between each printing of the grid - a value of around 1 is nice) 
+-animate, provide a float value (the number of seconds delay between each printing of the grid - a value of around 1 is nice) 
 I found the animate option nice to see how quarantine appeared visibly in the grid and blocked off areas of the landscape from infection!
 
 
@@ -71,6 +71,8 @@ parser.add_argument("-quarantine", "--quarantine")     # Quarantine should be se
 
 
 parser.add_argument("-reinfection", "--reinfection")
+
+parser.add_argument("-timesteps", "--timesteps")
 
 args = parser.parse_args()
 
@@ -176,8 +178,15 @@ class Agent:
 # Initialise a population of 1 infected and the rest susceptible.
 # Population is represented as a simple list of agents
 population = np.array([Agent("S", False) for i in range(populationSize)])
-population[populationSize-1].setState("I")
-population[populationSize-1].printState
+#population[populationSize-1].setState("I")
+
+
+# Start infection from the middle
+n = int(np.sqrt(populationSize))
+middle_index = (n // 2) + (n * (n // 2))
+population[middle_index].setState("I")
+
+population[populationSize-1].printState()
 
 INITIAL_POPULATION = copy.deepcopy(population)
 
@@ -197,10 +206,11 @@ def updateProcess(agent1, agent2, infectionRate, numInfected, numSusceptible, is
             agent2.setState("I")
             numInfected += 1
             numSusceptible -= 1
-
+            
             if isLattice and args.quarantine != None:
                 if random.random() < float(args.quarantine):  # Lets start with a 30% chance of an agent instantly quarantining
                     agent2.setState("Q")
+            
 
     elif (agent1.state == "S" and agent2.state == "I"):
         if (agent1.vaccinated):
@@ -210,9 +220,11 @@ def updateProcess(agent1, agent2, infectionRate, numInfected, numSusceptible, is
             numInfected += 1
             numSusceptible -= 1
 
+            
             if isLattice and args.quarantine != None:
                 if random.random() < float(args.quarantine):   # I know this is terrible management of command line args, but im assuming the user just inputs correct format arguments
                     agent1.setState("Q")
+            
 
     return numInfected, numSusceptible
 
@@ -277,8 +289,11 @@ def runSimulation(population, infectionRate, recoveryRate, nLattice):
             print(" | ".join(f"{agent.state:2}" for agent in row))
 
     count = 0
+    timesteps = 100
     # Main loop - Stopping criteria when no more infected individuals
-    while count < 100: #numInfected != 0 and 
+    if args.timesteps != None:
+        timesteps = int(args.timesteps)
+    while count < timesteps: #numInfected != 0 and 
 
         if nLattice:
 
