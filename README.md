@@ -20,11 +20,11 @@ Examples:\
 Grid printing:\
 python .\2422764_HenryBrooks.py -disease MEASLES -n 400 -lattice True -E 0.95 -P 0.95 -quarantine 0.4 -timesteps 100 -animate 1
 \
-Oscillating
+Oscillating\
 python .\2422764_HenryBrooks.py -disease MEASLES -n 900 -lattice True -E 0.95 -P 0.95 -reinfection 0.05 -timesteps 300
 \
-Regular COVID-19
+Regular COVID-19\
 python .\2422764_HenryBrooks.py -disease COVID-19 -n 400  -E 0.95 -P 0.95
 \
-Lattice Influenza:
+Lattice Influenza:\
 python .\2422764_HenryBrooks.py -disease INFLUENZA -n 900 -lattice True 
