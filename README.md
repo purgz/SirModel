@@ -1,7 +1,7 @@
 # SirModel
 SIR agent based simulation - game theory coursework university of birmingham
 
-Optional command line arguments (11):
+Optional command line arguments (11):\
 [-disease] {3 options, COVID-19, INFLUENZA, MEASLES} \
 [-n] {provide integer number, for lattice provide square number}\
 [-beta ] {custom infection rate, float value [0,1]}\
